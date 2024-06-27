@@ -39,7 +39,6 @@ import { useSavedData } from '../../../../../context/SavedDataContext';
   };
 
 
-const Activity = () => {
 
     const [timmyDetail, setTimmyDetail] = useState({
         name: "",
@@ -215,6 +214,6 @@ const Activity = () => {
         </section>
     </section>
   );
-}}
+}
 
 export default Activity
