@@ -4,18 +4,25 @@ import Image from "next/image";
 import styles from "./exercise.module.scss";
 import Timmy from "/public/assets/Timmysmall.svg";
 import plus from "/public/assets/Plus.svg";
-import { useState } from "react";
 import Activity from "@/components/activity/activity";
 import TimmyDetails from "@/levels/beginners/TimmyDetails";
-import LevelContext from "@/context/LevelContext"
+import LevelContext from "@/context/LevelContext";
+import Spinner from "../spinner";
 
 export default function Exercise({ level, day }) {
-  const { admin, updateDayItem, deleteDayItem, editItem, setEditItem, activity, setActivity } = useContext(LevelContext);
+  const {
+    deleteDayItem,
+    setEditItem,
+    activity,
+    setActivity,
+    elite,
+    fetchAllExercises,
+  } = useContext(LevelContext);
+  
 
   const addNewField = () => {
     setActivity(true);
   };
-
 
   const handleEdit = (item) => {
     setEditItem(item);
@@ -26,6 +33,7 @@ export default function Exercise({ level, day }) {
 
   return (
     <section className={styles.Beginners_Container}>
+      <Spinner />
       {!activity && (
         <div>
           <section className={styles.Activity_Container}>
@@ -40,10 +48,10 @@ export default function Exercise({ level, day }) {
             </div>
             <div className={styles.Activty_Container}>
               <div className={styles.Activty_Form}>
-                {admin[level]['exercise'][day].length === 0 && (
+                {elite?.length == 0 && (
                   <div className={styles.No_Activities}>No Activites Yet</div>
                 )}
-                {admin[level]['exercise'][day].map((timmy) => (
+                {elite?.map((timmy) => (
                   <div key={timmy.id}>
                     <TimmyDetails
                       imageProp={Timmy}
@@ -69,13 +77,7 @@ export default function Exercise({ level, day }) {
           </section>
         </div>
       )}
-      {activity && (
-        <Activity
-          type='exercise'
-          day={day}
-          level={level}
-        />
-      )}
+      {activity && <Activity type="Exercises" day={day} level={level} />}
     </section>
   );
 }
