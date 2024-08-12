@@ -1,5 +1,5 @@
 "use client";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import Image from "next/image";
 import styles from "./drills.module.scss";
 import Timmy from "/public/assets/Timmysmall.svg";
@@ -10,16 +10,37 @@ import TimmyDetails from "@/levels/beginners/TimmyDetails";
 import LevelContext from "@/context/LevelContext";
 import Spinner from "../spinner";
 
-export default function Drills({level, day}) {
-  const { elite, updateDayItem, deleteDayItem, editItem, setEditItem, activity, setActivity } = useContext(LevelContext);
+export default function Drills({ level, day }) {
+  const {
+    elite,
+    updateDayItem,
+    deleteDayItem,
+    editItem,
+    setEditItem,
+    activity,
+    setActivity,
+    fetchAllExercises,
+    deleteActivity,
+  } = useContext(LevelContext);
 
   const addNewField = () => {
+    setEditItem("");
     setActivity(true);
   };
+
+  useEffect(() => {
+    setActivity(false);
+    fetchAllExercises(day, "drills", level);
+  }, []);
 
   const handleEdit = (item) => {
     setEditItem(item);
     setActivity(true);
+  };
+
+  const deleteExercise = async (id) => {
+    await deleteActivity(id);
+    fetchAllExercises(day, "exercise", level);
   };
 
   return (
@@ -30,17 +51,18 @@ export default function Drills({level, day}) {
           <section className={styles.Activity_Container}>
             <div className={styles.Animation_Wrapper}>
               <ul>
-                <li>Animation</li>
-                <li>Activity Name</li>
+                <li>Animation Name</li>
+                <li>Activity Image Url</li>
+                <li>Animation Video URL</li>
                 <li>Description</li>
                 <li>Duration</li>
-                <li>Day</li>
-                <li>Animation URL</li>
+                <li></li>
+                <li></li>
               </ul>
             </div>
             <div className={styles.Activty_Container}>
               <div className={styles.Activty_Form}>
-              {elite?.length == 0 && (
+                {elite?.length == 0 && (
                   <div className={styles.No_Activities}>No Activites Yet</div>
                 )}
                 {elite?.map((timmy) => (
@@ -48,13 +70,12 @@ export default function Drills({level, day}) {
                     <TimmyDetails
                       imageProp={Timmy}
                       animationName={timmy.displayName}
-                      animation={timmy.anime_image_url}
+                      animationImg={timmy.imgUrl}
+                      animationVid={timmy.videoUrl}
                       description={timmy.description}
                       minute={timmy.duration.minutes}
                       seconds={timmy.duration.seconds}
-                      onDelete={() =>
-                        deleteDayItem(level, "exercise", day, timmy.id)
-                      }
+                      onDelete={() => deleteExercise(timmy._id)}
                       onEdit={() => handleEdit(timmy)}
                     />
                   </div>
@@ -71,13 +92,7 @@ export default function Drills({level, day}) {
           </section>
         </div>
       )}
-      {activity && (
-        <Activity
-        type='Drills'
-        day={day}
-        level={level}
-      />
-      )}
+      {activity && <Activity type="Drills" day={day} level={level} />}
     </section>
   );
 }

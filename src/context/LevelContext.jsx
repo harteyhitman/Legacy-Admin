@@ -2,23 +2,37 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createContext, useEffect, useState } from "react";
+import http from "@/utils/axiosInstance";
 
 const LevelContext = createContext();
 
 export const LevelProvider = ({ children }) => {
-  const [filterType, setFilterType] = useState("exercise");
+  const [filterType, setFilterType] = useState("");
   const [editItem, setEditItem] = useState(null);
   const [activity, setActivity] = useState(false);
   const [token, setToken] = useState("");
 
+  const [assist, setAssist] = useState(false);
   const [active, setActive] = useState(false);
   const [isActive, setIsActive] = useState(0);
   const [elite, setElite] = useState()
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log(elite)
-  }, [elite])
+    if(filterType != ''){
+      localStorage.setItem("filterType", filterType)
+    }
+    
+  }, [filterType])
+  useEffect(() => {
+    let cat
+    cat = localStorage.getItem("filterType")
+    if(filterType == '' && cat != ''){
+      setFilterType(cat)
+    }else if(filterType != '' && cat == '') {
+      setFilterType('exercise')
+    }
+  }, [filterType])
 
   const toggleMenu = () => {
     setActive(!active);
@@ -70,12 +84,11 @@ export const LevelProvider = ({ children }) => {
     };
     setIsLoading(true)
     try {
-      await axios
-        .post("https://legacy-backend-zmmd.onrender.com/admin/login", params)
+      await http
+        .post("/admin/login", params)
         .then((response) => {
           if (response.data.token !== "") {
             localStorage.setItem("userToken", response.data.token);
-            // document.cookie = `userToken=${response.data.token}; path=/;`;
             router.push("/dashboard");
             setIsLoading(false)
           }
@@ -91,43 +104,66 @@ export const LevelProvider = ({ children }) => {
   }
 
   async function fetchAllExercises(day, type, level) {
-    setElite(null)
-    const token = getTokenFromLocalStorage()
-    const params = {
-      day: day,
-      trainingSection: type,
-      skillLevel: level
-    }
-    setIsLoading(true)
     try {
-      await axios.get("https://legacy-backend-zmmd.onrender.com/training/allExercise",
-        {
+      setIsLoading(true);
+      const params = {
+        day: day,
+        trainingSection: type,
+        skillLevel: level
+      };
+  
+      const response = await http.get("/training/allExercise", {
         params: params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }).then((res) => {
-        setElite(res.data[0].trainingDescription)
-        setIsLoading(false)
       });
+      if(response.data == ""){
+        setElite([])
+      } else {
+        setElite(response.data[0].trainingDescription);
+
+      }
     } catch (error) {
-      console.error(error, "Error fetching exercises");
+      console.error("Error fetching exercises:", error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
   async function createExercises(params) {
-    const token = getTokenFromLocalStorage()
     try {
-      await axios.post("https://legacy-backend-zmmd.onrender.com/training/create", 
-        params,
-        {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      console.log(params, "detailcontext")
+      setIsLoading(true);
+      await http.post("/training/create", 
+        params)
     } catch (error) {
       console.error(error, "Error fetching exercises");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function deleteActivity(id) {
+    try {
+      setIsLoading(true);
+      const response = await http.delete(`/training/${id}`);
+      
+      if (response.status === 200) {
+      } else {
+        console.error('Failed to delete the activity.');
+      }
+    } catch (error) {
+      console.error(`Error deleting activity: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function editActivity(id, item){
+    try {
+      setIsLoading(true);
+      await http.patch(`training/description/${id}`, item)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -169,25 +205,25 @@ export const LevelProvider = ({ children }) => {
   };
 
   const deleteDayItem = (level, activityType, day, id) => {
-    setAdmin((prevAdmin) => {
-      const newState = { ...prevAdmin };
+    // setAdmin((prevAdmin) => {
+    //   const newState = { ...prevAdmin };
 
-      const updatedActivities = newState[level][activityType][day].filter(
-        (item) => item.id !== id
-      );
+    //   const updatedActivities = newState[level][activityType][day].filter(
+    //     (item) => item.id !== id
+    //   );
 
-      newState[level] = {
-        ...newState[level],
-        [activityType]: {
-          ...newState[level][activityType],
-          [day]: updatedActivities,
-        },
-      };
+    //   newState[level] = {
+    //     ...newState[level],
+    //     [activityType]: {
+    //       ...newState[level][activityType],
+    //       [day]: updatedActivities,
+    //     },
+    //   };
 
-      return newState;
-    });
-    setEditItem(null);
-    setActivity(false);
+    //   return newState;
+    // });
+    // setEditItem(null);
+    // setActivity(false);
   };
 
   const logout =() => {
@@ -221,7 +257,9 @@ export const LevelProvider = ({ children }) => {
         token,
         createExercises,
         fetchAllExercises,
-        isLoading
+        isLoading,
+        deleteActivity,
+        editActivity
       }}
     >
       {children}

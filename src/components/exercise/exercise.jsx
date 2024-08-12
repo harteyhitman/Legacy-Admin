@@ -1,5 +1,5 @@
 "use client";
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import Image from "next/image";
 import styles from "./exercise.module.scss";
 import Timmy from "/public/assets/Timmysmall.svg";
@@ -17,10 +17,16 @@ export default function Exercise({ level, day }) {
     setActivity,
     elite,
     fetchAllExercises,
+    deleteActivity,
   } = useContext(LevelContext);
-  
+
+  useEffect(() => {
+    setActivity(false);
+    fetchAllExercises(day, "exercise", level);
+  }, []);
 
   const addNewField = () => {
+    setEditItem("");
     setActivity(true);
   };
 
@@ -29,7 +35,10 @@ export default function Exercise({ level, day }) {
     setActivity(true);
   };
 
-  
+  const deleteExercise = async (id) => {
+    await deleteActivity(id);
+    fetchAllExercises(day, "exercise", level);
+  };
 
   return (
     <section className={styles.Beginners_Container}>
@@ -39,11 +48,13 @@ export default function Exercise({ level, day }) {
           <section className={styles.Activity_Container}>
             <div className={styles.Animation_Wrapper}>
               <ul>
-                <li>Animation</li>
-                <li>Activity Name</li>
+                <li>Animation Name</li>
+                <li>Activity Image Url</li>
+                <li>Animation Video URL</li>
                 <li>Description</li>
                 <li>Duration</li>
-                <li>Animation URL</li>
+                <li></li>
+                <li></li>
               </ul>
             </div>
             <div className={styles.Activty_Container}>
@@ -52,15 +63,16 @@ export default function Exercise({ level, day }) {
                   <div className={styles.No_Activities}>No Activites Yet</div>
                 )}
                 {elite?.map((timmy) => (
-                  <div key={timmy.id}>
+                  <div key={timmy._id}>
                     <TimmyDetails
                       imageProp={Timmy}
-                      animationName={timmy.anime_name}
-                      animation={timmy.anime_image_url}
+                      animationName={timmy.displayName}
+                      animationImg={timmy.imgUrl}
+                      animationVid={timmy.videoUrl}
                       description={timmy.description}
-                      minute={timmy.minute}
-                      seconds={timmy.seconds}
-                      onDelete={() => deleteDayItem(level, 'exercise', day, timmy.id)}
+                      minute={timmy.duration.minutes}
+                      seconds={timmy.duration.seconds}
+                      onDelete={() => deleteExercise(timmy._id)}
                       onEdit={() => handleEdit(timmy)}
                     />
                   </div>

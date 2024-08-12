@@ -6,7 +6,7 @@ import styles from "./activity.module.scss";
 import LevelContext from "@/context/LevelContext";
 
 const Activity = ({level, day, type}) => {
-  const { editItem, setActivity, updateDayItem, createExercises } = useContext(LevelContext);
+  const { editItem, setActivity, updateDayItem, createExercises, fetchAllExercises, editActivity } = useContext(LevelContext);
   const [timmyDetail, setTimmyDetail] = useState({
     skillLevel: level,
     trainingSection: type,
@@ -16,8 +16,8 @@ const Activity = ({level, day, type}) => {
     videoUrl: '',
     day: day,
     duration: {
-      minutes: 0,
-      seconds: 0
+      minutes: "",
+      seconds: ""
     }
   });
 
@@ -51,7 +51,9 @@ const Activity = ({level, day, type}) => {
   const submit = async (e) => {
     e.preventDefault();
     if (editItem) {
-      updateDayItem(level, type, day, timmyDetail);
+      await editActivity(editItem._id, timmyDetail);
+      setActivity(false);
+      fetchAllExercises(day, type, level)
     } else {
       await createExercises(timmyDetail)
       setActivity(false);
@@ -63,17 +65,20 @@ const Activity = ({level, day, type}) => {
   const handleTimeChange = (e) => {
     const { value, name } = e.target;
     if (/^\d{0,2}$/.test(value)) {
-        setTimmyDetail((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
+      setTimmyDetail((prev) => ({
+        ...prev,
+        duration: {
+          ...prev.duration,
+          [name]: value
+        }
+      }));
     }
   };
 
   return (
     <div className={styles.Activity_Container}>
       <div className={styles.Add_New_Activity}>
-      <b>{editItem ? 'Edit Activity' : `Add new activity / ${type}`}</b>
+      <b>{editItem ? "Edit Activity" : `Add new activity / ${type}`}</b>
       </div>
       <form onSubmit={submit} className={styles.Activity_Wrapper}>
         <h4>Basic information</h4>
